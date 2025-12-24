@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { User, UserRole, ClassLevel, VideoContent, MindMap, Quiz, Chapter } from './types';
-import { INITIAL_CHAPTERS } from './constants';
+import { GoogleGenAI } from "@google/genai";
+import { User, UserRole, ClassLevel, VideoContent, MindMap, Quiz, Chapter } from './types.ts';
+import { INITIAL_CHAPTERS } from './constants.ts';
 
 const STORAGE_KEY = 'visualminds_data_v1';
 
@@ -107,6 +108,8 @@ export const useStore = () => {
         newProgress.watchedVideos.push(videoId);
       }
       if (quizResult) {
+        // Fix for Error: Property 'id' does not exist on type '{ quizId: string; score: number; }'
+        // Using quizId directly as defined in the method signature.
         newProgress.quizScores[quizResult.quizId] = Math.max(
           newProgress.quizScores[quizResult.quizId] || 0,
           quizResult.score
@@ -120,6 +123,31 @@ export const useStore = () => {
         currentUser: updatedUser
       };
     });
+  };
+
+  const askSparky = async (question: string, contextChapter?: string) => {
+    try {
+      // Fix: Always use process.env.API_KEY directly when initializing GoogleGenAI.
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const systemPrompt = `You are Sparky, a friendly and enthusiastic AI tutor for kids aged 8-11 (Classes 3-5). 
+      Your tone is magical, encouraging, and very simple. Use emojis. 
+      If a kid asks about ${contextChapter || 'their lessons'}, explain it like a fun story. 
+      Keep answers short (max 3-4 sentences). Never use complex jargon.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: question,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.8,
+        },
+      });
+
+      return response.text || "Oops! My magic wand is a bit tired. Can you ask again? ✨";
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      return "Oh no! Sparky got a little lost in the clouds. Check your internet! ☁️";
+    }
   };
 
   const addContent = (type: 'video' | 'map' | 'quiz', content: any) => {
@@ -154,6 +182,7 @@ export const useStore = () => {
     setClass,
     updateProfile,
     updateProgress,
+    askSparky,
     addContent,
     removeContent,
     editContent,

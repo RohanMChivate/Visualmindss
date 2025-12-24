@@ -1,6 +1,6 @@
 {
   "name": "VisualMinds - Kids Learning Platform",
-  "description": "An interactive, colorful educational platform for students in Classes 3-5 with video lessons, mind maps, quizzes, and a comprehensive admin control panel.",
+  "description": "An interactive, AI-powered educational platform for students in Classes 3-5 with a Gemini-powered tutor, video lessons, and mind maps.",
   "requestFramePermissions": [
     "camera",
     "microphone"

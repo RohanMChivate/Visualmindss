@@ -1,18 +1,19 @@
 
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useStore } from './store';
-import { UserRole } from './types';
+import { useStore } from './store.ts';
+import { UserRole } from './types.ts';
 
 // Components
-import Navbar from './components/Navbar';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ClassSelection from './pages/ClassSelection';
-import StudentDashboard from './pages/StudentDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import ProgressTracker from './pages/ProgressTracker';
-import Profile from './pages/Profile';
+import Navbar from './components/Navbar.tsx';
+import AIAssistant from './components/AIAssistant.tsx';
+import Login from './pages/Login.tsx';
+import Register from './pages/Register.tsx';
+import ClassSelection from './pages/ClassSelection.tsx';
+import StudentDashboard from './pages/StudentDashboard.tsx';
+import AdminDashboard from './pages/AdminDashboard.tsx';
+import ProgressTracker from './pages/ProgressTracker.tsx';
+import Profile from './pages/Profile.tsx';
 
 const App: React.FC = () => {
   const store = useStore();
@@ -20,9 +21,10 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col selection:bg-sky-200 selection:text-sky-900">
         {currentUser && <Navbar store={store} />}
-        <main className="flex-grow">
+        
+        <main className="flex-grow relative">
           <Routes>
             {/* Public Routes */}
             {!currentUser ? (
@@ -62,6 +64,11 @@ const App: React.FC = () => {
               </>
             )}
           </Routes>
+          
+          {/* Persistant AI Assistant for Students */}
+          {currentUser && currentUser.role === UserRole.STUDENT && (
+            <AIAssistant store={store} />
+          )}
         </main>
       </div>
     </HashRouter>
