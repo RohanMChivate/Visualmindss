@@ -29,15 +29,6 @@ const initialData: AppData = {
   currentUser: null
 };
 
-// Safe access to process.env for Vite environment
-const getApiKey = () => {
-  try {
-    return (process.env as any).API_KEY;
-  } catch {
-    return undefined;
-  }
-};
-
 export const useStore = () => {
   const [data, setData] = useState<AppData>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -133,12 +124,8 @@ export const useStore = () => {
 
   const askSparky = async (question: string, contextChapter?: string) => {
     try {
-      const apiKey = getApiKey();
-      if (!apiKey) {
-        return "I need my magic key to answer that! 🪄 (Check environment variables)";
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
+      // Direct environment variable access as per guidelines
+      const ai = new GoogleGenAI({ apiKey: (process.env as any).API_KEY });
       const systemInstruction = `You are Sparky, a friendly and enthusiastic AI tutor for kids aged 8-11 (Classes 3-5). 
       Your tone is magical, encouraging, and very simple. Use emojis. 
       If a kid asks about ${contextChapter || 'their lessons'}, explain it like a fun story. 
@@ -156,7 +143,7 @@ export const useStore = () => {
       return response.text || "Oops! My magic wand is a bit tired. Can you ask again? ✨";
     } catch (error) {
       console.error("Gemini Error:", error);
-      return "Oh no! Sparky got a little lost in the clouds. Check your internet! ☁️";
+      return "Sparky is taking a quick nap! 😴 Make sure your Teacher has set up my magic key correctly in the dashboard.";
     }
   };
 
