@@ -1,0 +1,542 @@
+
+import React, { useState } from 'react';
+import { ClassLevel, VideoContent, MindMap, Quiz, Question, User, UserRole, Chapter } from '../types';
+
+interface Props {
+  store: any;
+}
+
+const AdminDashboard: React.FC<Props> = ({ store }) => {
+  const { users, videos, mindMaps, quizzes, chapters, addContent, removeContent, editContent } = store;
+  const [activeTab, setActiveTab] = useState<'library' | 'students'>('library');
+  const [showAddModal, setShowAddModal] = useState<'video' | 'map' | 'quiz' | null>(null);
+  const [editingItem, setEditingItem] = useState<{ type: 'video' | 'map' | 'quiz', data: any } | null>(null);
+  const [selectedStudentReport, setSelectedStudentReport] = useState<User | null>(null);
+
+  const handleDelete = (type: 'video' | 'map' | 'quiz', id: string, title: string) => {
+    if (confirm(`Are you sure you want to remove "${title}" from the library?`)) {
+      removeContent(type, id);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6 md:p-10 text-slate-800">
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between space-y-4 md:space-y-0">
+          <div>
+            <h1 className="text-4xl font-black text-slate-900 leading-tight">Admin Hub 🛠️</h1>
+            <p className="text-slate-500 text-lg font-medium">Manage your educational library and track students.</p>
+          </div>
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+            <button 
+              onClick={() => setActiveTab('library')} 
+              className={`px-8 py-2.5 rounded-xl font-black transition-all ${activeTab === 'library' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              Library & Content
+            </button>
+            <button 
+              onClick={() => setActiveTab('students')} 
+              className={`px-8 py-2.5 rounded-xl font-black transition-all ${activeTab === 'students' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              Student Progress
+            </button>
+          </div>
+        </header>
+
+        {activeTab === 'library' ? (
+          <div className="space-y-8">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <button onClick={() => setShowAddModal('video')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-sky-500 group transition-all text-left shadow-sm">
+                <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
+                <h3 className="text-xl font-black text-slate-800">New Video</h3>
+                <p className="text-slate-400 font-medium text-sm">Upload a new lesson.</p>
+              </button>
+              <button onClick={() => setShowAddModal('map')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-rose-500 group transition-all text-left shadow-sm">
+                <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
+                <h3 className="text-xl font-black text-slate-800">New Mind Map</h3>
+                <p className="text-slate-400 font-medium text-sm">Add a visual resource.</p>
+              </button>
+              <button onClick={() => setShowAddModal('quiz')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-amber-500 group transition-all text-left shadow-sm">
+                <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📝</div>
+                <h3 className="text-xl font-black text-slate-800">New Quiz</h3>
+                <p className="text-slate-400 font-medium text-sm">Create a student challenge.</p>
+              </button>
+            </div>
+
+            {/* Library Table */}
+            <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                <h2 className="text-2xl font-black text-slate-800">Content Library</h2>
+                <span className="bg-slate-100 px-4 py-1 rounded-full text-xs font-black text-slate-500">{videos.length + mindMaps.length + quizzes.length} Items Total</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-slate-50/50 text-left border-b">
+                      <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest">Type</th>
+                      <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest">Resource Title</th>
+                      <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest">Chapter / Class</th>
+                      <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {/* Videos */}
+                    {videos.map((v: VideoContent) => (
+                      <LibraryRow 
+                        key={v.id} 
+                        icon="🎥" 
+                        title={v.title} 
+                        chapter={chapters.find((c: Chapter) => c.id === v.chapterId)?.name || 'Unknown'} 
+                        classLevel={v.classLevel}
+                        onEdit={() => setEditingItem({ type: 'video', data: v })}
+                        onDelete={() => handleDelete('video', v.id, v.title)}
+                      />
+                    ))}
+                    {/* Maps */}
+                    {mindMaps.map((m: MindMap) => (
+                      <LibraryRow 
+                        key={m.id} 
+                        icon="🧠" 
+                        title={m.title} 
+                        chapter={chapters.find((c: Chapter) => c.id === m.chapterId)?.name || 'Unknown'} 
+                        classLevel={m.classLevel}
+                        onEdit={() => setEditingItem({ type: 'map', data: m })}
+                        onDelete={() => handleDelete('map', m.id, m.title)}
+                      />
+                    ))}
+                    {/* Quizzes */}
+                    {quizzes.map((q: Quiz) => (
+                      <LibraryRow 
+                        key={q.id} 
+                        icon="📝" 
+                        title={q.title} 
+                        chapter={chapters.find((c: Chapter) => c.id === q.chapterId)?.name || 'Unknown'} 
+                        classLevel={q.classLevel}
+                        onEdit={() => setEditingItem({ type: 'quiz', data: q })}
+                        onDelete={() => handleDelete('quiz', q.id, q.title)}
+                      />
+                    ))}
+                    {videos.length === 0 && mindMaps.length === 0 && quizzes.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-20 text-center text-slate-300 italic font-bold">Your library is empty. Add some magic! ✨</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Students View with Progress Tracking */
+          <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
+            <div className="p-8 border-b border-slate-50">
+              <h2 className="text-2xl font-black text-slate-800">Student Progress Tracker</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 border-b">
+                    <th className="px-8 py-6 font-black text-slate-400 uppercase text-xs tracking-[0.2em]">Student</th>
+                    <th className="px-8 py-6 font-black text-slate-400 uppercase text-xs tracking-[0.2em]">Class</th>
+                    <th className="px-8 py-6 font-black text-slate-400 uppercase text-xs tracking-[0.2em]">Watched</th>
+                    <th className="px-8 py-6 font-black text-slate-400 uppercase text-xs tracking-[0.2em]">Avg Score</th>
+                    <th className="px-8 py-6 font-black text-slate-400 uppercase text-xs tracking-[0.2em] text-right">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {users.filter((u: User) => u.role === UserRole.STUDENT).map((student: User) => {
+                    const quizCount = Object.keys(student.progress.quizScores).length;
+                    const totalScore = Object.values(student.progress.quizScores).reduce((a, b) => (a as number) + (b as number), 0) as number;
+                    const avgScore = quizCount > 0 ? Math.round(totalScore / quizCount) : 0;
+                    const isAvatarUrl = student.avatar && (student.avatar.startsWith('data:') || student.avatar.startsWith('http'));
+
+                    return (
+                      <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm shrink-0">
+                              {isAvatarUrl ? (
+                                <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-2xl">{student.avatar || '😊'}</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-black text-slate-900 leading-none mb-1">{student.name}</p>
+                              <p className="text-xs text-slate-400 font-medium uppercase tracking-tighter">{student.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className="px-4 py-1 bg-sky-100 text-sky-700 rounded-full font-black text-[10px] uppercase">
+                            {student.selectedClass ? `Class ${student.selectedClass}` : 'NO CLASS'}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 font-bold text-slate-500">
+                          🎬 {student.progress.watchedVideos.length} Videos
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center space-x-3">
+                            <span className={`text-lg font-black ${avgScore > 75 ? 'text-green-500' : avgScore > 40 ? 'text-amber-500' : 'text-slate-400'}`}>
+                              {avgScore}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <button 
+                            onClick={() => setSelectedStudentReport(student)}
+                            className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs hover:bg-slate-800 transition-colors"
+                          >
+                            View Full Report
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Modals for Adding Content */}
+        {showAddModal === 'video' && <AddVideoModal onAdd={(v) => { addContent('video', v); setShowAddModal(null); }} onCancel={() => setShowAddModal(null)} chapters={chapters} />}
+        {showAddModal === 'map' && <AddMapModal onAdd={(m) => { addContent('map', m); setShowAddModal(null); }} onCancel={() => setShowAddModal(null)} chapters={chapters} />}
+        {showAddModal === 'quiz' && <AddQuizModal onAdd={(q) => { addContent('quiz', q); setShowAddModal(null); }} onCancel={() => setShowAddModal(null)} chapters={chapters} />}
+
+        {/* Modal for Editing Content */}
+        {editingItem && (
+          <EditContentModal 
+            type={editingItem.type} 
+            item={editingItem.data} 
+            chapters={chapters}
+            onSave={(updated) => { editContent(editingItem.type, editingItem.data.id, updated); setEditingItem(null); }}
+            onCancel={() => setEditingItem(null)}
+          />
+        )}
+
+        {/* Modal for Student Report Card */}
+        {selectedStudentReport && (
+          <StudentReportModal 
+            student={selectedStudentReport} 
+            videos={videos} 
+            quizzes={quizzes}
+            onClose={() => setSelectedStudentReport(null)}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const LibraryRow: React.FC<{ icon: string, title: string, chapter: string, classLevel: string, onEdit: () => void, onDelete: () => void }> = ({ icon, title, chapter, classLevel, onEdit, onDelete }) => (
+  <tr className="hover:bg-slate-50/50 transition-colors group">
+    <td className="px-8 py-5">
+      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-xl">{icon}</div>
+    </td>
+    <td className="px-8 py-5">
+      <p className="font-black text-slate-800">{title}</p>
+    </td>
+    <td className="px-8 py-5">
+      <p className="text-sm font-bold text-slate-500">{chapter}</p>
+      <p className="text-[10px] font-black text-sky-500 uppercase">Class {classLevel}</p>
+    </td>
+    <td className="px-8 py-5 text-right">
+      <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={onEdit} className="p-2 hover:bg-sky-100 text-sky-600 rounded-lg transition-colors" title="Edit">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        </button>
+        <button onClick={onDelete} className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors" title="Delete">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </button>
+      </div>
+    </td>
+  </tr>
+);
+
+const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, chapters: Chapter[], onSave: (updated: any) => void, onCancel: () => void }> = ({ type, item, chapters, onSave, onCancel }) => {
+  const [title, setTitle] = useState(item.title);
+  const [chapterId, setChapterId] = useState(item.chapterId);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const chapter = chapters.find(c => c.id === chapterId);
+    onSave({
+      ...item,
+      title,
+      chapterId,
+      classLevel: chapter?.classLevel || item.classLevel
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white">
+        <h2 className="text-3xl font-black text-slate-900 mb-8">Edit {type === 'video' ? 'Video' : type === 'map' ? 'Map' : 'Quiz'}</h2>
+        <div className="space-y-6 mb-10">
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Title</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold" />
+          </div>
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
+            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold">
+              {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="flex space-x-4">
+          <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
+          <button type="submit" className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+const StudentReportModal: React.FC<{ student: User, videos: VideoContent[], quizzes: Quiz[], onClose: () => void }> = ({ student, videos, quizzes, onClose }) => {
+  const isAvatarUrl = student.avatar && (student.avatar.startsWith('data:') || student.avatar.startsWith('http'));
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[3.5rem] p-10 shadow-2xl relative">
+        <button onClick={onClose} className="absolute top-8 right-8 text-slate-400 hover:text-slate-600 text-2xl font-black">✕</button>
+        
+        <header className="flex items-center space-x-6 mb-12">
+          <div className="w-20 h-20 bg-slate-100 rounded-[2rem] flex items-center justify-center text-5xl overflow-hidden border-4 border-white shadow-lg">
+            {isAvatarUrl ? <img src={student.avatar} className="w-full h-full object-cover" /> : <span>{student.avatar || '😊'}</span>}
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-slate-900">{student.name}'s Progress</h2>
+            <p className="text-sky-600 font-bold tracking-widest uppercase text-xs">Student ID: {student.id}</p>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-2 gap-4 mb-10">
+          <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100 text-center">
+            <span className="block text-4xl mb-2">🎬</span>
+            <span className="block text-2xl font-black text-slate-800">{student.progress.watchedVideos.length}</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Videos Watched</span>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100 text-center">
+            <span className="block text-4xl mb-2">🎯</span>
+            <span className="block text-2xl font-black text-slate-800">{Object.keys(student.progress.quizScores).length}</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Quizzes Taken</span>
+          </div>
+        </div>
+
+        <section className="mb-8">
+          <h3 className="text-xl font-black text-slate-800 mb-4 px-2">Quiz Performance</h3>
+          <div className="space-y-3">
+            {Object.entries(student.progress.quizScores).map(([qId, score]) => {
+              const quiz = quizzes.find(q => q.id === qId);
+              return (
+                <div key={qId} className="flex justify-between items-center p-4 bg-white border-2 border-slate-50 rounded-2xl shadow-sm">
+                  <span className="font-bold text-slate-600">{quiz?.title || 'Unknown Quiz'}</span>
+                  <div className="flex items-center space-x-3">
+                    <span className={`font-black ${score >= 80 ? 'text-green-500' : 'text-amber-500'}`}>{score}%</span>
+                    <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${score >= 80 ? 'bg-green-500' : 'bg-amber-500'}`} style={{ width: `${score}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {Object.keys(student.progress.quizScores).length === 0 && <p className="text-center text-slate-300 py-4 italic">No quizzes attempted yet.</p>}
+          </div>
+        </section>
+
+        <button 
+          onClick={onClose}
+          className="w-full py-5 bg-slate-900 text-white font-black rounded-3xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xl"
+        >
+          Close Report
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ... Rest of the file remains the same ...
+
+const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, chapters: any[] }> = ({ onAdd, onCancel, chapters }) => {
+  const [title, setTitle] = useState('');
+  const [chapterId, setChapterId] = useState(chapters[0]?.id || '');
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) return;
+    const chapter = chapters.find(c => c.id === chapterId);
+    onAdd({
+      id: Math.random().toString(36).substr(2, 9),
+      chapterId,
+      classLevel: chapter.classLevel,
+      title,
+      url: URL.createObjectURL(file)
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white">
+        <h2 className="text-3xl font-black text-slate-900 mb-8">Upload Video 🎥</h2>
+        <div className="space-y-6 mb-10">
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Lesson Title</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold" placeholder="e.g. Chapter 1 Intro" />
+          </div>
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
+            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold">
+              {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select File</label>
+            <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
+          </div>
+        </div>
+        <div className="flex space-x-4">
+          <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
+          <button type="submit" className="flex-1 py-4 bg-sky-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Upload</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, chapters: any[] }> = ({ onAdd, onCancel, chapters }) => {
+  const [title, setTitle] = useState('');
+  const [chapterId, setChapterId] = useState(chapters[0]?.id || '');
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) return;
+    const chapter = chapters.find(c => c.id === chapterId);
+    onAdd({
+      id: Math.random().toString(36).substr(2, 9),
+      chapterId,
+      classLevel: chapter.classLevel,
+      title,
+      url: URL.createObjectURL(file),
+      type: file.type.includes('pdf') ? 'pdf' : 'image'
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white">
+        <h2 className="text-3xl font-black text-slate-900 mb-8">Add Mind Map 🧠</h2>
+        <div className="space-y-6 mb-10">
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Resource Name</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold" />
+          </div>
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
+            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold">
+              {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select Image/PDF</label>
+            <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm" />
+          </div>
+        </div>
+        <div className="flex space-x-4">
+          <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
+          <button type="submit" className="flex-1 py-4 bg-rose-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Upload</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+const AddQuizModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, chapters: any[] }> = ({ onAdd, onCancel, chapters }) => {
+  const [title, setTitle] = useState('');
+  const [chapterId, setChapterId] = useState(chapters[0]?.id || '');
+  const [questions, setQuestions] = useState<Question[]>([]);
+  
+  const addQuestion = () => {
+    setQuestions([...questions, { id: Math.random().toString(36).substr(2, 9), text: '', options: ['', '', '', ''], correctAnswer: 0 }]);
+  };
+
+  const updateQuestion = (idx: number, field: string, value: any) => {
+    const q = [...questions];
+    (q[idx] as any)[field] = value;
+    setQuestions(q);
+  };
+
+  const updateOption = (qIdx: number, oIdx: number, value: string) => {
+    const q = [...questions];
+    q[qIdx].options[oIdx] = value;
+    setQuestions(q);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (questions.length === 0) return;
+    const chapter = chapters.find(c => c.id === chapterId);
+    onAdd({
+      id: Math.random().toString(36).substr(2, 9),
+      chapterId,
+      classLevel: chapter.classLevel,
+      title,
+      questions
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-2xl rounded-[3rem] p-12 shadow-2xl my-10 border-4 border-white">
+        <h2 className="text-4xl font-black text-slate-900 mb-8">Build MCQ Quiz 📝</h2>
+        <div className="space-y-8 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Quiz Title</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-amber-500 focus:outline-none transition-all font-bold" />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
+              <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-amber-500 focus:outline-none transition-all font-bold">
+                {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="border-t-4 border-slate-50 pt-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-slate-800">Challenge Steps ({questions.length})</h3>
+              <button type="button" onClick={addQuestion} className="bg-amber-100 text-amber-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-amber-200 transition-all">+ Add Step</button>
+            </div>
+            <div className="space-y-6">
+              {questions.map((q, qIdx) => (
+                <div key={q.id} className="p-8 bg-slate-50 rounded-[2.5rem] border-2 border-slate-100 shadow-sm relative">
+                  <div className="absolute -top-3 -left-3 bg-slate-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-black text-xs">{qIdx + 1}</div>
+                  <input type="text" placeholder={`Question Text`} value={q.text} onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)} required className="w-full px-6 py-3 mb-6 bg-white border-2 border-slate-100 rounded-2xl font-black" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {q.options.map((opt, oIdx) => (
+                      <div key={oIdx} className="flex items-center space-x-3 bg-white p-2 rounded-2xl border border-slate-100">
+                        <input type="radio" name={`correct-${q.id}`} checked={q.correctAnswer === oIdx} onChange={() => updateQuestion(qIdx, 'correctAnswer', oIdx)} className="w-5 h-5 accent-amber-500" />
+                        <input type="text" placeholder={`Option ${oIdx + 1}`} value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)} required className="flex-1 px-3 py-1 font-bold text-sm bg-transparent border-none focus:ring-0" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex space-x-6">
+          <button type="button" onClick={onCancel} className="flex-1 py-5 font-black text-slate-400">Cancel</button>
+          <button type="submit" className="flex-1 py-5 bg-amber-500 text-white font-black rounded-[2rem] shadow-xl hover:scale-105 active:scale-95 transition-all text-xl">Save Quiz</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default AdminDashboard;
