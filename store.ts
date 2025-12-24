@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { User, UserRole, ClassLevel, VideoContent, MindMap, Quiz, Chapter } from './types.ts';
@@ -40,7 +39,7 @@ export const useStore = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-      console.error("Failed to save to localStorage. Image might be too large.", e);
+      console.error("Failed to save to localStorage. Data might be too large.", e);
     }
   }, [data]);
 
@@ -108,8 +107,6 @@ export const useStore = () => {
         newProgress.watchedVideos.push(videoId);
       }
       if (quizResult) {
-        // Fix for Error: Property 'id' does not exist on type '{ quizId: string; score: number; }'
-        // Using quizId directly as defined in the method signature.
         newProgress.quizScores[quizResult.quizId] = Math.max(
           newProgress.quizScores[quizResult.quizId] || 0,
           quizResult.score
@@ -127,7 +124,11 @@ export const useStore = () => {
 
   const askSparky = async (question: string, contextChapter?: string) => {
     try {
-      // Fix: Always use process.env.API_KEY directly when initializing GoogleGenAI.
+      if (!process.env.API_KEY) {
+        console.warn("API_KEY is missing in environment.");
+        return "I need my magic key to answer that! 🪄 (Check environment variables)";
+      }
+
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const systemPrompt = `You are Sparky, a friendly and enthusiastic AI tutor for kids aged 8-11 (Classes 3-5). 
       Your tone is magical, encouraging, and very simple. Use emojis. 
