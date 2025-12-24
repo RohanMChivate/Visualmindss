@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ClassLevel, VideoContent, MindMap, Quiz, Question, User, UserRole, Chapter } from '../types';
 
@@ -45,12 +44,11 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
 
         {activeTab === 'library' ? (
           <div className="space-y-8">
-            {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <button onClick={() => setShowAddModal('video')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-sky-500 group transition-all text-left shadow-sm">
                 <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
                 <h3 className="text-xl font-black text-slate-800">New Video</h3>
-                <p className="text-slate-400 font-medium text-sm">Upload a new lesson.</p>
+                <p className="text-slate-400 font-medium text-sm">Upload or link a video lesson.</p>
               </button>
               <button onClick={() => setShowAddModal('map')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-rose-500 group transition-all text-left shadow-sm">
                 <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
@@ -64,7 +62,6 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
               </button>
             </div>
 
-            {/* Library Table */}
             <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex justify-between items-center">
                 <h2 className="text-2xl font-black text-slate-800">Content Library</h2>
@@ -81,7 +78,6 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {/* Videos */}
                     {videos.map((v: VideoContent) => (
                       <LibraryRow 
                         key={v.id} 
@@ -93,7 +89,6 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                         onDelete={() => handleDelete('video', v.id, v.title)}
                       />
                     ))}
-                    {/* Maps */}
                     {mindMaps.map((m: MindMap) => (
                       <LibraryRow 
                         key={m.id} 
@@ -105,7 +100,6 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                         onDelete={() => handleDelete('map', m.id, m.title)}
                       />
                     ))}
-                    {/* Quizzes */}
                     {quizzes.map((q: Quiz) => (
                       <LibraryRow 
                         key={q.id} 
@@ -128,7 +122,6 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
             </div>
           </div>
         ) : (
-          /* Students View with Progress Tracking */
           <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
             <div className="p-8 border-b border-slate-50">
               <h2 className="text-2xl font-black text-slate-800">Student Progress Tracker</h2>
@@ -200,12 +193,10 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
           </div>
         )}
 
-        {/* Modals for Adding Content */}
         {showAddModal === 'video' && <AddVideoModal onAdd={(v) => { addContent('video', v); setShowAddModal(null); }} onCancel={() => setShowAddModal(null)} chapters={chapters} />}
         {showAddModal === 'map' && <AddMapModal onAdd={(m) => { addContent('map', m); setShowAddModal(null); }} onCancel={() => setShowAddModal(null)} chapters={chapters} />}
         {showAddModal === 'quiz' && <AddQuizModal onAdd={(q) => { addContent('quiz', q); setShowAddModal(null); }} onCancel={() => setShowAddModal(null)} chapters={chapters} />}
 
-        {/* Modal for Editing Content */}
         {editingItem && (
           <EditContentModal 
             type={editingItem.type} 
@@ -216,7 +207,6 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
           />
         )}
 
-        {/* Modal for Student Report Card */}
         {selectedStudentReport && (
           <StudentReportModal 
             student={selectedStudentReport} 
@@ -358,49 +348,71 @@ const StudentReportModal: React.FC<{ student: User, videos: VideoContent[], quiz
   );
 };
 
-// ... Rest of the file remains the same ...
-
 const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, chapters: any[] }> = ({ onAdd, onCancel, chapters }) => {
   const [title, setTitle] = useState('');
   const [chapterId, setChapterId] = useState(chapters[0]?.id || '');
+  const [uploadType, setUploadType] = useState<'file' | 'url'>('url');
+  const [videoUrl, setVideoUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
     const chapter = chapters.find(c => c.id === chapterId);
+    let finalUrl = videoUrl;
+
+    if (uploadType === 'file' && file) {
+      finalUrl = URL.createObjectURL(file);
+    }
+
+    if (!finalUrl) return alert('Please provide a video source!');
+
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
       chapterId,
       classLevel: chapter.classLevel,
       title,
-      url: URL.createObjectURL(file)
+      url: finalUrl
     });
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white">
-        <h2 className="text-3xl font-black text-slate-900 mb-8">Upload Video 🎥</h2>
-        <div className="space-y-6 mb-10">
+        <h2 className="text-3xl font-black text-slate-900 mb-8">Add Video 🎥</h2>
+        <div className="space-y-5 mb-8">
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Lesson Title</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold" placeholder="e.g. Chapter 1 Intro" />
           </div>
           <div>
-            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
+            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter (Class Level)</label>
             <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold">
               {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select File</label>
-            <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
+          
+          <div className="bg-slate-50 p-2 rounded-2xl flex space-x-2">
+            <button type="button" onClick={() => setUploadType('url')} className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${uploadType === 'url' ? 'bg-white shadow-sm' : 'text-slate-400'}`}>Link URL</button>
+            <button type="button" onClick={() => setUploadType('file')} className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${uploadType === 'file' ? 'bg-white shadow-sm' : 'text-slate-400'}`}>Local File</button>
           </div>
+
+          {uploadType === 'url' ? (
+            <div>
+              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Video URL (Persistent)</label>
+              <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://example.com/video.mp4" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
+              <p className="mt-2 text-[10px] text-sky-600 font-bold italic">Recommended for shared deployment.</p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select File (Temporary)</label>
+              <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
+              <p className="mt-2 text-[10px] text-amber-600 font-bold italic">Note: Local files will reset if you refresh!</p>
+            </div>
+          )}
         </div>
         <div className="flex space-x-4">
           <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
-          <button type="submit" className="flex-1 py-4 bg-sky-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Upload</button>
+          <button type="submit" className="flex-1 py-4 bg-sky-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Add Lesson</button>
         </div>
       </form>
     </div>
@@ -410,19 +422,32 @@ const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, c
 const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, chapters: any[] }> = ({ onAdd, onCancel, chapters }) => {
   const [title, setTitle] = useState('');
   const [chapterId, setChapterId] = useState(chapters[0]?.id || '');
+  const [uploadType, setUploadType] = useState<'file' | 'url'>('url');
+  const [mapUrl, setMapUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
     const chapter = chapters.find(c => c.id === chapterId);
+    let finalUrl = mapUrl;
+    let type: 'image' | 'pdf' = 'image';
+
+    if (uploadType === 'file' && file) {
+      finalUrl = URL.createObjectURL(file);
+      type = file.type.includes('pdf') ? 'pdf' : 'image';
+    } else {
+      type = mapUrl.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
+    }
+
+    if (!finalUrl) return alert('Please provide a source!');
+
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
       chapterId,
       classLevel: chapter.classLevel,
       title,
-      url: URL.createObjectURL(file),
-      type: file.type.includes('pdf') ? 'pdf' : 'image'
+      url: finalUrl,
+      type
     });
   };
 
@@ -430,7 +455,7 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white">
         <h2 className="text-3xl font-black text-slate-900 mb-8">Add Mind Map 🧠</h2>
-        <div className="space-y-6 mb-10">
+        <div className="space-y-5 mb-8">
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Resource Name</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold" />
@@ -441,10 +466,17 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
               {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select Image/PDF</label>
-            <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm" />
+
+          <div className="bg-slate-50 p-2 rounded-2xl flex space-x-2">
+            <button type="button" onClick={() => setUploadType('url')} className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${uploadType === 'url' ? 'bg-white shadow-sm' : 'text-slate-400'}`}>Link URL</button>
+            <button type="button" onClick={() => setUploadType('file')} className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${uploadType === 'file' ? 'bg-white shadow-sm' : 'text-slate-400'}`}>Local File</button>
           </div>
+
+          {uploadType === 'url' ? (
+            <input type="url" value={mapUrl} onChange={(e) => setMapUrl(e.target.value)} placeholder="https://example.com/map.jpg" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm" />
+          ) : (
+            <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm" />
+          )}
         </div>
         <div className="flex space-x-4">
           <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
@@ -478,7 +510,7 @@ const AddQuizModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, ch
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (questions.length === 0) return;
+    if (questions.length === 0) return alert('Add at least one question!');
     const chapter = chapters.find(c => c.id === chapterId);
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
