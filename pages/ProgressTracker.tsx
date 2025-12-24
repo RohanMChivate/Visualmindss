@@ -1,6 +1,6 @@
-
 import React, { useMemo } from 'react';
-import { VideoContent, Quiz } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { VideoContent, Quiz, UserRole } from '../types';
 
 interface Props {
   store: any;
@@ -9,6 +9,7 @@ interface Props {
 const ProgressTracker: React.FC<Props> = ({ store }) => {
   const { currentUser, videos, quizzes, chapters } = store;
   const currentClass = currentUser.selectedClass;
+  const navigate = useNavigate();
 
   const stats = useMemo(() => {
     const classVideos = videos.filter((v: VideoContent) => v.classLevel === currentClass);
@@ -36,9 +37,28 @@ const ProgressTracker: React.FC<Props> = ({ store }) => {
     };
   }, [currentUser, videos, quizzes, currentClass]);
 
+  const handleBack = () => {
+    if (currentUser?.role === UserRole.ADMIN) {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-sky-50 p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
+        {/* Chunky Back Button */}
+        <button 
+          onClick={handleBack}
+          className="mb-8 group flex items-center space-x-4 bg-white border-b-8 border-sky-200 px-8 py-4 rounded-[2rem] shadow-xl hover:-translate-y-1 active:translate-y-1 active:border-b-0 active:scale-95 transition-all"
+        >
+          <div className="w-10 h-10 bg-sky-400 rounded-xl flex items-center justify-center text-white shadow-lg transform -rotate-6 group-hover:rotate-0 transition-transform">
+            <span className="text-2xl">🏠</span>
+          </div>
+          <span className="text-xl font-black text-slate-700">Back to Dashboard</span>
+        </button>
+
         <header className="text-center mb-12">
           <h1 className="text-4xl font-black text-slate-800 mb-2">My Learning Journey 🚀</h1>
           <p className="text-xl text-slate-500 font-medium">You are doing a fantastic job, {currentUser.name}!</p>

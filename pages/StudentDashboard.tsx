@@ -14,6 +14,7 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [quizScore, setQuizScore] = useState<{ score: number, total: number } | null>(null);
 
+  // Strictly filter chapters based on user's class (e.g., Class 4 only sees Chimpu Monkey)
   const filteredChapters = useMemo(() => 
     chapters.filter((c: Chapter) => c.classLevel === currentClass),
     [chapters, currentClass]
@@ -101,11 +102,11 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">
-            <h2 className="text-xl font-black text-slate-700 mb-4 px-2 uppercase tracking-widest text-sm">Your Chapters</h2>
+            <h2 className="text-xl font-black text-slate-700 mb-4 px-2 uppercase tracking-widest text-sm">Your Lesson</h2>
             <div className="space-y-3">
               {filteredChapters.map((chapter: Chapter) => (
-                <div key={chapter.id} className="p-5 bg-white rounded-[1.5rem] shadow-md border-b-4 border-slate-200 hover:border-sky-300 transition-all hover:-translate-y-1">
-                  <span className="text-xs font-black text-sky-500 uppercase tracking-widest">Active</span>
+                <div key={chapter.id} className="p-5 bg-white rounded-[1.5rem] shadow-md border-b-4 border-sky-400">
+                  <span className="text-xs font-black text-sky-500 uppercase tracking-widest">Selected Chapter</span>
                   <h3 className="font-black text-slate-800 mt-1 text-lg leading-tight">{chapter.name}</h3>
                 </div>
               ))}
@@ -133,7 +134,7 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                       <p className="text-slate-500 mt-2 font-medium">Click to learn! 🎒</p>
                     </div>
                   </div>
-                )) : <EmptyState icon="🎞️" message="No videos available for this class yet." />}
+                )) : <EmptyState icon="🎞️" message={`No videos added for your chapter yet.`} />}
               </div>
             )}
 
@@ -149,7 +150,7 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                       View Map
                     </a>
                   </div>
-                )) : <EmptyState icon="🧠" message="Mind maps will appear here soon!" />}
+                )) : <EmptyState icon="🧠" message="Mind maps for this chapter are coming soon!" />}
               </div>
             )}
 
@@ -176,7 +177,7 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                       </button>
                     </div>
                   </div>
-                )) : <EmptyState icon="🎯" message="No quizzes available yet." />}
+                )) : <EmptyState icon="🎯" message="No quizzes available for this chapter yet." />}
               </div>
             )}
           </div>

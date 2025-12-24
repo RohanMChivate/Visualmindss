@@ -1,6 +1,6 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserRole } from '../types';
 
 interface Props {
   store: any;
@@ -44,15 +44,26 @@ const Profile: React.FC<Props> = ({ store }) => {
 
   const isAvatarUrl = avatar.startsWith('data:image') || avatar.startsWith('http');
 
+  const handleBack = () => {
+    if (currentUser?.role === UserRole.ADMIN) {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-sky-50 p-6 md:p-10">
       <div className="max-w-2xl mx-auto">
+        {/* Chunky Back Button */}
         <button 
-          onClick={() => navigate('/dashboard')}
-          className="mb-8 flex items-center space-x-3 text-sky-600 font-bold hover:text-sky-700 transition-all bg-white px-6 py-3 rounded-2xl shadow-md border-2 border-sky-100 hover:-translate-x-1"
+          onClick={handleBack}
+          className="mb-8 group flex items-center space-x-4 bg-white border-b-8 border-sky-200 px-8 py-4 rounded-[2rem] shadow-xl hover:-translate-y-1 active:translate-y-1 active:border-b-0 active:scale-95 transition-all"
         >
-          <span className="text-xl">🏠</span>
-          <span>Back to Home</span>
+          <div className="w-10 h-10 bg-sky-400 rounded-xl flex items-center justify-center text-white shadow-lg transform -rotate-6 group-hover:rotate-0 transition-transform">
+            <span className="text-2xl">🏠</span>
+          </div>
+          <span className="text-xl font-black text-slate-700">Back to {currentUser?.role === UserRole.ADMIN ? 'Admin Hub' : 'Home'}</span>
         </button>
 
         <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl border-4 border-white relative overflow-hidden">
