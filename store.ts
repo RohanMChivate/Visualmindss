@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { User, UserRole, ClassLevel, VideoContent, MindMap, Quiz, Chapter } from './types.ts';
-import { INITIAL_CHAPTERS } from './constants.ts';
+import { User, UserRole, ClassLevel, VideoContent, MindMap, Quiz, Chapter } from './types';
+import { INITIAL_CHAPTERS } from './constants';
 
 const STORAGE_KEY = 'visualminds_data_v1';
 
@@ -29,6 +29,15 @@ const initialData: AppData = {
   currentUser: null
 };
 
+// Safe access to process.env for Vite environment
+const getApiKey = () => {
+  try {
+    return (process.env as any).API_KEY;
+  } catch {
+    return undefined;
+  }
+};
+
 export const useStore = () => {
   const [data, setData] = useState<AppData>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -39,7 +48,7 @@ export const useStore = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-      console.error("Failed to save to localStorage. Data might be too large.", e);
+      console.error("Failed to save to localStorage", e);
     }
   }, [data]);
 
@@ -124,13 +133,13 @@ export const useStore = () => {
 
   const askSparky = async (question: string, contextChapter?: string) => {
     try {
-      if (!process.env.API_KEY) {
-        console.warn("API_KEY is missing in environment.");
+      const apiKey = getApiKey();
+      if (!apiKey) {
         return "I need my magic key to answer that! 🪄 (Check environment variables)";
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const systemPrompt = `You are Sparky, a friendly and enthusiastic AI tutor for kids aged 8-11 (Classes 3-5). 
+      const ai = new GoogleGenAI({ apiKey });
+      const systemInstruction = `You are Sparky, a friendly and enthusiastic AI tutor for kids aged 8-11 (Classes 3-5). 
       Your tone is magical, encouraging, and very simple. Use emojis. 
       If a kid asks about ${contextChapter || 'their lessons'}, explain it like a fun story. 
       Keep answers short (max 3-4 sentences). Never use complex jargon.`;
@@ -139,7 +148,7 @@ export const useStore = () => {
         model: 'gemini-3-flash-preview',
         contents: question,
         config: {
-          systemInstruction: systemPrompt,
+          systemInstruction,
           temperature: 0.8,
         },
       });

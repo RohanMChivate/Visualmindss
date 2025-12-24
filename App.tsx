@@ -1,19 +1,18 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useStore } from './store.ts';
-import { UserRole } from './types.ts';
+import { useStore } from './store';
+import { UserRole } from './types';
 
 // Components
-import Navbar from './components/Navbar.tsx';
-import AIAssistant from './components/AIAssistant.tsx';
-import Login from './pages/Login.tsx';
-import Register from './pages/Register.tsx';
-import ClassSelection from './pages/ClassSelection.tsx';
-import StudentDashboard from './pages/StudentDashboard.tsx';
-import AdminDashboard from './pages/AdminDashboard.tsx';
-import ProgressTracker from './pages/ProgressTracker.tsx';
-import Profile from './pages/Profile.tsx';
+import Navbar from './components/Navbar';
+import AIAssistant from './components/AIAssistant';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ClassSelection from './pages/ClassSelection';
+import StudentDashboard from './pages/StudentDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import ProgressTracker from './pages/ProgressTracker';
+import Profile from './pages/Profile';
 
 const App: React.FC = () => {
   const store = useStore();
@@ -26,7 +25,6 @@ const App: React.FC = () => {
         
         <main className="flex-grow relative">
           <Routes>
-            {/* Public Routes */}
             {!currentUser ? (
               <>
                 <Route path="/login" element={<Login login={store.login} />} />
@@ -35,7 +33,6 @@ const App: React.FC = () => {
               </>
             ) : (
               <>
-                {/* Role Protected Routes */}
                 {currentUser.role === UserRole.ADMIN ? (
                   <>
                     <Route path="/admin" element={<AdminDashboard store={store} />} />
@@ -48,7 +45,6 @@ const App: React.FC = () => {
                       element={<ClassSelection currentClass={currentUser.selectedClass} setClass={store.setClass} />} 
                     />
                     
-                    {/* Only allow access to dashboards if class is selected */}
                     {currentUser.selectedClass ? (
                       <>
                         <Route path="/dashboard" element={<StudentDashboard store={store} />} />
@@ -65,7 +61,6 @@ const App: React.FC = () => {
             )}
           </Routes>
           
-          {/* Persistant AI Assistant for Students */}
           {currentUser && currentUser.role === UserRole.STUDENT && (
             <AIAssistant store={store} />
           )}

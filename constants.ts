@@ -1,5 +1,4 @@
-
-import { ClassLevel, Chapter } from './types.ts';
+import { ClassLevel, Chapter } from './types';
 
 export const INITIAL_CHAPTERS: Chapter[] = [
   { id: 'c4-1', name: 'Chimpu Monkey', classLevel: ClassLevel.CLASS_4 },
