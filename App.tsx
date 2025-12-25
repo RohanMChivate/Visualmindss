@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useStore } from './store';
@@ -29,6 +30,7 @@ const App: React.FC = () => {
               <>
                 <Route path="/login" element={<Login login={store.login} />} />
                 <Route path="/register" element={<Register register={store.register} />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </>
             ) : (
@@ -37,6 +39,7 @@ const App: React.FC = () => {
                   <>
                     <Route path="/admin" element={<AdminDashboard store={store} />} />
                     <Route path="/profile" element={<Profile store={store} />} />
+                    <Route path="/" element={<Navigate to="/admin" replace />} />
                     <Route path="*" element={<Navigate to="/admin" replace />} />
                   </>
                 ) : (
@@ -51,10 +54,14 @@ const App: React.FC = () => {
                         <Route path="/dashboard" element={<StudentDashboard store={store} />} />
                         <Route path="/progress" element={<ProgressTracker store={store} />} />
                         <Route path="/profile" element={<Profile store={store} />} />
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                       </>
                     ) : (
-                      <Route path="*" element={<Navigate to="/select-class" replace />} />
+                      <>
+                        <Route path="/" element={<Navigate to="/select-class" replace />} />
+                        <Route path="*" element={<Navigate to="/select-class" replace />} />
+                      </>
                     )}
                   </>
                 )}

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from '../types';
+import { UserRole, ClassLevel } from '../types';
 
 interface Props {
   store: any;
@@ -15,12 +15,13 @@ const Profile: React.FC<Props> = ({ store }) => {
 
   const [name, setName] = useState(currentUser?.name || '');
   const [avatar, setAvatar] = useState(currentUser?.avatar || '😊');
+  const [selectedClass, setSelectedClass] = useState<ClassLevel>(currentUser?.selectedClass || ClassLevel.CLASS_3);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isCustom, setIsCustom] = useState(currentUser?.avatar?.startsWith('data:image') || false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(name, avatar);
+    updateProfile(name, avatar, currentUser?.role === UserRole.STUDENT ? selectedClass : undefined);
     setIsSuccess(true);
     setTimeout(() => setIsSuccess(false), 3000);
   };
@@ -126,6 +127,29 @@ const Profile: React.FC<Props> = ({ store }) => {
                 />
               </div>
 
+              {/* Class Selection for Students */}
+              {currentUser?.role === UserRole.STUDENT && (
+                <div>
+                  <label className="block text-slate-700 font-black mb-3 ml-2 text-lg uppercase tracking-wide">My Current Class</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    {[ClassLevel.CLASS_3, ClassLevel.CLASS_4, ClassLevel.CLASS_5].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setSelectedClass(level)}
+                        className={`py-4 rounded-2xl font-black text-xl transition-all border-4 ${
+                          selectedClass === level 
+                            ? 'bg-sky-500 border-sky-300 text-white shadow-lg scale-105' 
+                            : 'bg-white border-slate-100 text-slate-400'
+                        }`}
+                      >
+                        Class {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Emoji Picker */}
               <div>
                 <div className="flex justify-between items-end mb-4 px-2">
@@ -185,7 +209,7 @@ const Profile: React.FC<Props> = ({ store }) => {
         
         {/* Helper text */}
         <p className="text-center mt-8 text-slate-400 font-bold text-sm">
-          Tip: You can change your name and photo as many times as you like!
+          Tip: You can change your name, class, and photo as many times as you like!
         </p>
       </div>
     </div>

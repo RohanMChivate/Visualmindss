@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ClassLevel, VideoContent, MindMap, Quiz, Question, User, UserRole, Chapter } from '../types';
 
@@ -13,7 +14,7 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
   const [selectedStudentReport, setSelectedStudentReport] = useState<User | null>(null);
 
   const handleDelete = (type: 'video' | 'map' | 'quiz', id: string, title: string) => {
-    if (confirm(`Are you sure you want to remove "${title}" from the library?`)) {
+    if (confirm(`⚠️ DELETE CONTENT\n\nAre you sure you want to remove "${title}"?\n\nThis will permanently delete this lesson for all students.`)) {
       removeContent(type, id);
     }
   };
@@ -23,15 +24,15 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
       <div className="max-w-7xl mx-auto">
         <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 leading-tight">Admin Hub 🛠️</h1>
-            <p className="text-slate-500 text-lg font-medium">Manage your educational library and track students.</p>
+            <h1 className="text-4xl font-black text-slate-900 leading-tight">Teacher Admin Hub 🛠️</h1>
+            <p className="text-slate-500 text-lg font-medium">Control the library, add lessons, or remove content.</p>
           </div>
           <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
             <button 
               onClick={() => setActiveTab('library')} 
               className={`px-8 py-2.5 rounded-xl font-black transition-all ${activeTab === 'library' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
             >
-              Library & Content
+              Content Manager
             </button>
             <button 
               onClick={() => setActiveTab('students')} 
@@ -47,30 +48,34 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <button onClick={() => setShowAddModal('video')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-sky-500 group transition-all text-left shadow-sm">
                 <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
-                <h3 className="text-xl font-black text-slate-800">New Video</h3>
-                <p className="text-slate-400 font-medium text-sm">Upload or link a video lesson.</p>
+                <h3 className="text-xl font-black text-slate-800">Add New Video</h3>
+                <p className="text-slate-400 font-medium text-sm">Upload a lesson video.</p>
               </button>
               <button onClick={() => setShowAddModal('map')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-rose-500 group transition-all text-left shadow-sm">
                 <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
-                <h3 className="text-xl font-black text-slate-800">New Mind Map</h3>
-                <p className="text-slate-400 font-medium text-sm">Add a visual resource.</p>
+                <h3 className="text-xl font-black text-slate-800">Add Mind Map</h3>
+                <p className="text-slate-400 font-medium text-sm">Add a story map or chart.</p>
               </button>
               <button onClick={() => setShowAddModal('quiz')} className="p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-amber-500 group transition-all text-left shadow-sm">
                 <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📝</div>
-                <h3 className="text-xl font-black text-slate-800">New Quiz</h3>
-                <p className="text-slate-400 font-medium text-sm">Create a student challenge.</p>
+                <h3 className="text-xl font-black text-slate-800">Add MCQ Quiz</h3>
+                <p className="text-slate-400 font-medium text-sm">Create a new challenge.</p>
               </button>
             </div>
 
             <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
-              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                <h2 className="text-2xl font-black text-slate-800">Content Library</h2>
-                <span className="bg-slate-100 px-4 py-1 rounded-full text-xs font-black text-slate-500">{videos.length + mindMaps.length + quizzes.length} Items Total</span>
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                <h2 className="text-2xl font-black text-slate-800">Library Content</h2>
+                <div className="flex items-center space-x-3">
+                    <span className="bg-sky-100 px-3 py-1 rounded-full text-[10px] font-black text-sky-600">{videos.length} Videos</span>
+                    <span className="bg-rose-100 px-3 py-1 rounded-full text-[10px] font-black text-rose-600">{mindMaps.length} Maps</span>
+                    <span className="bg-amber-100 px-3 py-1 rounded-full text-[10px] font-black text-amber-600">{quizzes.length} Quizzes</span>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-slate-50/50 text-left border-b">
+                    <tr className="bg-white text-left border-b">
                       <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest">Type</th>
                       <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest">Resource Title</th>
                       <th className="px-8 py-4 font-black text-slate-400 text-xs uppercase tracking-widest">Chapter / Class</th>
@@ -78,6 +83,7 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
+                    {/* VIDEO SECTION */}
                     {videos.map((v: VideoContent) => (
                       <LibraryRow 
                         key={v.id} 
@@ -89,6 +95,8 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                         onDelete={() => handleDelete('video', v.id, v.title)}
                       />
                     ))}
+                    
+                    {/* MIND MAP SECTION */}
                     {mindMaps.map((m: MindMap) => (
                       <LibraryRow 
                         key={m.id} 
@@ -100,6 +108,8 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                         onDelete={() => handleDelete('map', m.id, m.title)}
                       />
                     ))}
+
+                    {/* QUIZ SECTION */}
                     {quizzes.map((q: Quiz) => (
                       <LibraryRow 
                         key={q.id} 
@@ -111,9 +121,14 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                         onDelete={() => handleDelete('quiz', q.id, q.title)}
                       />
                     ))}
+
                     {videos.length === 0 && mindMaps.length === 0 && quizzes.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-20 text-center text-slate-300 italic font-bold">Your library is empty. Add some magic! ✨</td>
+                        <td colSpan={4} className="py-24 text-center">
+                            <div className="text-6xl mb-4">📭</div>
+                            <p className="text-slate-400 font-black text-xl">Your library is empty.</p>
+                            <p className="text-slate-300 font-bold">Start adding lessons using the buttons above!</p>
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -181,7 +196,7 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
                             onClick={() => setSelectedStudentReport(student)}
                             className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs hover:bg-slate-800 transition-colors"
                           >
-                            View Full Report
+                            View Report
                           </button>
                         </td>
                       </tr>
@@ -221,7 +236,7 @@ const AdminDashboard: React.FC<Props> = ({ store }) => {
 };
 
 const LibraryRow: React.FC<{ icon: string, title: string, chapter: string, classLevel: string, onEdit: () => void, onDelete: () => void }> = ({ icon, title, chapter, classLevel, onEdit, onDelete }) => (
-  <tr className="hover:bg-slate-50/50 transition-colors group">
+  <tr className="hover:bg-slate-50/30 transition-colors group">
     <td className="px-8 py-5">
       <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-xl">{icon}</div>
     </td>
@@ -233,12 +248,20 @@ const LibraryRow: React.FC<{ icon: string, title: string, chapter: string, class
       <p className="text-[10px] font-black text-sky-500 uppercase">Class {classLevel}</p>
     </td>
     <td className="px-8 py-5 text-right">
-      <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={onEdit} className="p-2 hover:bg-sky-100 text-sky-600 rounded-lg transition-colors" title="Edit">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+      <div className="flex justify-end space-x-2">
+        <button 
+            onClick={onEdit} 
+            className="p-2.5 bg-slate-100 hover:bg-sky-500 hover:text-white text-slate-500 rounded-xl transition-all shadow-sm" 
+            title="Edit"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
         </button>
-        <button onClick={onDelete} className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors" title="Delete">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        <button 
+            onClick={onDelete} 
+            className="p-2.5 bg-red-50 hover:bg-red-600 hover:text-white text-red-500 rounded-xl transition-all shadow-sm" 
+            title="Delete"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
         </button>
       </div>
     </td>
@@ -304,11 +327,11 @@ const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, ch
         <div className="space-y-6 mb-10">
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Title</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold" />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-slate-900" />
           </div>
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
-            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold">
+            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-slate-900">
               {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
             </select>
           </div>
@@ -327,17 +350,16 @@ const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, ch
                   value={url} 
                   onChange={(e) => setUrl(e.target.value)} 
                   placeholder="https://..." 
-                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm" 
+                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm text-slate-900" 
                 />
               ) : (
                 <input 
                   type="file" 
                   accept={type === 'video' ? 'video/*' : 'image/*,.pdf'} 
                   onChange={(e) => setFile(e.target.files?.[0] || null)} 
-                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm" 
+                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm text-slate-900" 
                 />
               )}
-              <p className="text-[10px] text-slate-400 italic">Persistent data requires URLs or small files (under 5MB).</p>
             </div>
           )}
         </div>
@@ -463,11 +485,11 @@ const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, c
         <div className="space-y-5 mb-8">
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Lesson Title</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold" placeholder="e.g. Chapter 1 Intro" />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-slate-900" placeholder="e.g. Chapter 1 Intro" />
           </div>
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter (Class Level)</label>
-            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold">
+            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-slate-900">
               {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
             </select>
           </div>
@@ -480,12 +502,12 @@ const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, c
           {uploadType === 'url' ? (
             <div>
               <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Video URL (Recommended)</label>
-              <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://example.com/video.mp4" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
+              <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://example.com/video.mp4" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm text-slate-900" />
             </div>
           ) : (
             <div>
               <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select File</label>
-              <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
+              <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm text-slate-900" />
             </div>
           )}
         </div>
@@ -552,11 +574,11 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
         <div className="space-y-5 mb-8">
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Resource Name</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold" />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-slate-900" />
           </div>
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
-            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold">
+            <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-slate-900">
               {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
             </select>
           </div>
@@ -567,9 +589,9 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
           </div>
 
           {uploadType === 'url' ? (
-            <input type="url" value={mapUrl} onChange={(e) => setMapUrl(e.target.value)} placeholder="https://example.com/map.jpg" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm" />
+            <input type="url" value={mapUrl} onChange={(e) => setMapUrl(e.target.value)} placeholder="https://example.com/map.jpg" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm text-slate-900" />
           ) : (
-            <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm" />
+            <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-rose-500 focus:outline-none transition-all font-bold text-sm text-slate-900" />
           )}
         </div>
         <div className="flex space-x-4">
@@ -625,11 +647,11 @@ const AddQuizModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, ch
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Quiz Title</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-amber-500 focus:outline-none transition-all font-bold" />
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-amber-500 focus:outline-none transition-all font-bold text-slate-900" />
             </div>
             <div>
               <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Chapter</label>
-              <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-amber-500 focus:outline-none transition-all font-bold">
+              <select value={chapterId} onChange={(e) => setChapterId(e.target.value)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-amber-500 focus:outline-none transition-all font-bold text-slate-900">
                 {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
               </select>
             </div>
@@ -644,12 +666,12 @@ const AddQuizModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, ch
               {questions.map((q, qIdx) => (
                 <div key={q.id} className="p-8 bg-slate-50 rounded-[2.5rem] border-2 border-slate-100 shadow-sm relative">
                   <div className="absolute -top-3 -left-3 bg-slate-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-black text-xs">{qIdx + 1}</div>
-                  <input type="text" placeholder={`Question Text`} value={q.text} onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)} required className="w-full px-6 py-3 mb-6 bg-white border-2 border-slate-100 rounded-2xl font-black" />
+                  <input type="text" placeholder={`Question Text`} value={q.text} onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)} required className="w-full px-6 py-3 mb-6 bg-white border-2 border-slate-100 rounded-2xl font-black text-slate-900" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {q.options.map((opt, oIdx) => (
                       <div key={oIdx} className="flex items-center space-x-3 bg-white p-2 rounded-2xl border border-slate-100">
                         <input type="radio" name={`correct-${q.id}`} checked={q.correctAnswer === oIdx} onChange={() => updateQuestion(qIdx, 'correctAnswer', oIdx)} className="w-5 h-5 accent-amber-500" />
-                        <input type="text" placeholder={`Option ${oIdx + 1}`} value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)} required className="flex-1 px-3 py-1 font-bold text-sm bg-transparent border-none focus:ring-0" />
+                        <input type="text" placeholder={`Option ${oIdx + 1}`} value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)} required className="flex-1 px-3 py-1 font-bold text-sm bg-transparent border-none focus:ring-0 text-slate-900" />
                       </div>
                     ))}
                   </div>

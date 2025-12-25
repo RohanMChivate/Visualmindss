@@ -37,7 +37,7 @@ const Register: React.FC<RegisterProps> = ({ register }) => {
               onChange={(e) => setName(e.target.value)}
               required
               placeholder="What's your name?"
-              className="w-full px-5 py-3 rounded-2xl border-2 border-slate-200 focus:border-green-400 focus:outline-none transition-colors text-lg"
+              className="w-full px-5 py-3 rounded-2xl border-2 border-slate-200 focus:border-green-400 focus:outline-none transition-colors text-lg text-slate-900"
             />
           </div>
 
@@ -49,7 +49,7 @@ const Register: React.FC<RegisterProps> = ({ register }) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="e.g. cool.kid@fun.com"
-              className="w-full px-5 py-3 rounded-2xl border-2 border-slate-200 focus:border-green-400 focus:outline-none transition-colors text-lg"
+              className="w-full px-5 py-3 rounded-2xl border-2 border-slate-200 focus:border-green-400 focus:outline-none transition-colors text-lg text-slate-900"
             />
           </div>
 
