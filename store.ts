@@ -123,9 +123,14 @@ export const useStore = () => {
   };
 
   const askSparky = async (question: string, contextChapter?: string) => {
+    const apiKey = (process.env as any).API_KEY;
+
+    if (!apiKey || apiKey.trim() === '') {
+      return "Sparky is taking a quick nap! 😴 My magic wand is missing its power. Please ask your teacher to set up the magic key! ✨";
+    }
+
     try {
-      // Direct environment variable access as per guidelines
-      const ai = new GoogleGenAI({ apiKey: (process.env as any).API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = `You are Sparky, a friendly and enthusiastic AI tutor for kids aged 8-11 (Classes 3-5). 
       Your tone is magical, encouraging, and very simple. Use emojis. 
       If a kid asks about ${contextChapter || 'their lessons'}, explain it like a fun story. 
@@ -143,7 +148,7 @@ export const useStore = () => {
       return response.text || "Oops! My magic wand is a bit tired. Can you ask again? ✨";
     } catch (error) {
       console.error("Gemini Error:", error);
-      return "Sparky is taking a quick nap! 😴 Make sure your Teacher has set up my magic key correctly in the dashboard.";
+      return "Sparky's magic is feeling a bit weak right now. 🪄 Let's try again in a moment!";
     }
   };
 

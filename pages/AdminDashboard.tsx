@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ClassLevel, VideoContent, MindMap, Quiz, Question, User, UserRole, Chapter } from '../types';
 
@@ -248,22 +249,40 @@ const LibraryRow: React.FC<{ icon: string, title: string, chapter: string, class
 const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, chapters: Chapter[], onSave: (updated: any) => void, onCancel: () => void }> = ({ type, item, chapters, onSave, onCancel }) => {
   const [title, setTitle] = useState(item.title);
   const [chapterId, setChapterId] = useState(item.chapterId);
+  const [sourceType, setSourceType] = useState<'url' | 'file'>('url');
+  const [url, setUrl] = useState(item.url || '');
+  const [file, setFile] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const chapter = chapters.find(c => c.id === chapterId);
-    onSave({
+    
+    let finalUrl = url;
+    if (sourceType === 'file' && file) {
+      finalUrl = URL.createObjectURL(file);
+    }
+
+    const updatedItem = {
       ...item,
       title,
       chapterId,
-      classLevel: chapter?.classLevel || item.classLevel
-    });
+      classLevel: chapter?.classLevel || item.classLevel,
+      url: finalUrl
+    };
+
+    if (type === 'map') {
+      updatedItem.type = (sourceType === 'file' && file) 
+        ? (file.type.includes('pdf') ? 'pdf' : 'image')
+        : (finalUrl.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image');
+    }
+
+    onSave(updatedItem);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white">
-        <h2 className="text-3xl font-black text-slate-900 mb-8">Edit {type === 'video' ? 'Video' : type === 'map' ? 'Map' : 'Quiz'}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl border-4 border-white my-8">
+        <h2 className="text-3xl font-black text-slate-900 mb-8">Edit {type === 'video' ? 'Video' : type === 'map' ? 'Mind Map' : 'Quiz'}</h2>
         <div className="space-y-6 mb-10">
           <div>
             <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Title</label>
@@ -275,6 +294,34 @@ const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, ch
               {chapters.map(c => <option key={c.id} value={c.id}>{c.name} (Class {c.classLevel})</option>)}
             </select>
           </div>
+
+          {(type === 'video' || type === 'map') && (
+            <div className="space-y-4">
+              <label className="block text-slate-700 font-black uppercase text-xs tracking-widest">Replace Source</label>
+              <div className="bg-slate-50 p-2 rounded-2xl flex space-x-2">
+                <button type="button" onClick={() => setSourceType('url')} className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${sourceType === 'url' ? 'bg-white shadow-sm' : 'text-slate-400'}`}>Link URL</button>
+                <button type="button" onClick={() => setSourceType('file')} className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${sourceType === 'file' ? 'bg-white shadow-sm' : 'text-slate-400'}`}>Upload File</button>
+              </div>
+
+              {sourceType === 'url' ? (
+                <input 
+                  type="url" 
+                  value={url} 
+                  onChange={(e) => setUrl(e.target.value)} 
+                  placeholder="https://..." 
+                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm" 
+                />
+              ) : (
+                <input 
+                  type="file" 
+                  accept={type === 'video' ? 'video/*' : 'image/*,.pdf'} 
+                  onChange={(e) => setFile(e.target.files?.[0] || null)} 
+                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm" 
+                />
+              )}
+              <p className="text-[10px] text-slate-400 italic">Current source: {item.url?.substring(0, 40)}...</p>
+            </div>
+          )}
         </div>
         <div className="flex space-x-4">
           <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
@@ -319,7 +366,9 @@ const StudentReportModal: React.FC<{ student: User, videos: VideoContent[], quiz
         <section className="mb-8">
           <h3 className="text-xl font-black text-slate-800 mb-4 px-2">Quiz Performance</h3>
           <div className="space-y-3">
-            {Object.entries(student.progress.quizScores).map(([qId, score]) => {
+            {/* Fix type error by casting score value to number */}
+            {Object.entries(student.progress.quizScores).map(([qId, scoreValue]) => {
+              const score = scoreValue as number;
               const quiz = quizzes.find(q => q.id === qId);
               return (
                 <div key={qId} className="flex justify-between items-center p-4 bg-white border-2 border-slate-50 rounded-2xl shadow-sm">
