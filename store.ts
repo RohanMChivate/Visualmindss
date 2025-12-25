@@ -20,6 +20,7 @@ const initialData: AppData = {
       name: 'Super Admin',
       email: 'admin@visualminds.com',
       role: UserRole.ADMIN,
+      avatar: '🍎',
       progress: { watchedVideos: [], quizScores: {} }
     }
   ],
@@ -32,19 +33,30 @@ const initialData: AppData = {
 export const useStore = () => {
   const [data, setData] = useState<AppData>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : initialData;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Ensure currentUser is null on fresh load to force login
+        return { ...parsed, currentUser: null };
+      } catch (e) {
+        return initialData;
+      }
+    }
+    return initialData;
   });
 
+  // Sync to localStorage whenever data changes
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
       console.error("Failed to save to localStorage", e);
+      // Handle quota exceeded by warning or clearing non-essential data if needed
     }
   }, [data]);
 
   const login = (email: string, role: UserRole) => {
-    const user = data.users.find(u => u.email === email && u.role === role);
+    const user = data.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.role === role);
     if (user) {
       setData(prev => ({ ...prev, currentUser: user }));
       return true;
@@ -53,6 +65,13 @@ export const useStore = () => {
   };
 
   const register = (name: string, email: string) => {
+    // Check if user already exists
+    const exists = data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (exists) {
+      setData(prev => ({ ...prev, currentUser: exists }));
+      return;
+    }
+
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
       name,

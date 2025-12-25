@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ClassLevel, VideoContent, MindMap, Quiz, Question, User, UserRole, Chapter } from '../types';
 
@@ -246,20 +245,38 @@ const LibraryRow: React.FC<{ icon: string, title: string, chapter: string, class
   </tr>
 );
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
 const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, chapters: Chapter[], onSave: (updated: any) => void, onCancel: () => void }> = ({ type, item, chapters, onSave, onCancel }) => {
   const [title, setTitle] = useState(item.title);
   const [chapterId, setChapterId] = useState(item.chapterId);
   const [sourceType, setSourceType] = useState<'url' | 'file'>('url');
   const [url, setUrl] = useState(item.url || '');
   const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     const chapter = chapters.find(c => c.id === chapterId);
     
     let finalUrl = url;
     if (sourceType === 'file' && file) {
-      finalUrl = URL.createObjectURL(file);
+      try {
+        finalUrl = await fileToBase64(file);
+      } catch (err) {
+        console.error("Base64 conversion failed", err);
+        alert("Failed to process file. Please use a URL instead.");
+        setIsLoading(false);
+        return;
+      }
     }
 
     const updatedItem = {
@@ -277,6 +294,7 @@ const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, ch
     }
 
     onSave(updatedItem);
+    setIsLoading(false);
   };
 
   return (
@@ -319,13 +337,15 @@ const EditContentModal: React.FC<{ type: 'video' | 'map' | 'quiz', item: any, ch
                   className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 focus:outline-none transition-all font-bold text-sm" 
                 />
               )}
-              <p className="text-[10px] text-slate-400 italic">Current source: {item.url?.substring(0, 40)}...</p>
+              <p className="text-[10px] text-slate-400 italic">Persistent data requires URLs or small files (under 5MB).</p>
             </div>
           )}
         </div>
         <div className="flex space-x-4">
           <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
-          <button type="submit" className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Save Changes</button>
+          <button type="submit" disabled={isLoading} className="flex-1 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </form>
     </div>
@@ -366,7 +386,6 @@ const StudentReportModal: React.FC<{ student: User, videos: VideoContent[], quiz
         <section className="mb-8">
           <h3 className="text-xl font-black text-slate-800 mb-4 px-2">Quiz Performance</h3>
           <div className="space-y-3">
-            {/* Fix type error by casting score value to number */}
             {Object.entries(student.progress.quizScores).map(([qId, scoreValue]) => {
               const score = scoreValue as number;
               const quiz = quizzes.find(q => q.id === qId);
@@ -403,17 +422,29 @@ const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, c
   const [uploadType, setUploadType] = useState<'file' | 'url'>('url');
   const [videoUrl, setVideoUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     const chapter = chapters.find(c => c.id === chapterId);
     let finalUrl = videoUrl;
 
     if (uploadType === 'file' && file) {
-      finalUrl = URL.createObjectURL(file);
+      try {
+        finalUrl = await fileToBase64(file);
+      } catch (err) {
+        alert("Video too large or invalid. Please use a URL link for better results.");
+        setIsLoading(false);
+        return;
+      }
     }
 
-    if (!finalUrl) return alert('Please provide a video source!');
+    if (!finalUrl) {
+      alert('Please provide a video source!');
+      setIsLoading(false);
+      return;
+    }
 
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
@@ -422,6 +453,7 @@ const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, c
       title,
       url: finalUrl
     });
+    setIsLoading(false);
   };
 
   return (
@@ -447,21 +479,21 @@ const AddVideoModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, c
 
           {uploadType === 'url' ? (
             <div>
-              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Video URL (Persistent)</label>
+              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Video URL (Recommended)</label>
               <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://example.com/video.mp4" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
-              <p className="mt-2 text-[10px] text-sky-600 font-bold italic">Recommended for shared deployment.</p>
             </div>
           ) : (
             <div>
-              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select File (Temporary)</label>
+              <label className="block text-slate-700 font-black mb-2 uppercase text-xs tracking-widest">Select File</label>
               <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-sky-500 focus:outline-none transition-all font-bold text-sm" />
-              <p className="mt-2 text-[10px] text-amber-600 font-bold italic">Note: Local files will reset if you refresh!</p>
             </div>
           )}
         </div>
         <div className="flex space-x-4">
           <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
-          <button type="submit" className="flex-1 py-4 bg-sky-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Add Lesson</button>
+          <button type="submit" disabled={isLoading} className="flex-1 py-4 bg-sky-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">
+            {isLoading ? 'Uploading...' : 'Add Lesson'}
+          </button>
         </div>
       </form>
     </div>
@@ -474,21 +506,33 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
   const [uploadType, setUploadType] = useState<'file' | 'url'>('url');
   const [mapUrl, setMapUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     const chapter = chapters.find(c => c.id === chapterId);
     let finalUrl = mapUrl;
     let type: 'image' | 'pdf' = 'image';
 
     if (uploadType === 'file' && file) {
-      finalUrl = URL.createObjectURL(file);
-      type = file.type.includes('pdf') ? 'pdf' : 'image';
+      try {
+        finalUrl = await fileToBase64(file);
+        type = file.type.includes('pdf') ? 'pdf' : 'image';
+      } catch (err) {
+        alert("Failed to process file.");
+        setIsLoading(false);
+        return;
+      }
     } else {
       type = mapUrl.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
     }
 
-    if (!finalUrl) return alert('Please provide a source!');
+    if (!finalUrl) {
+      alert('Please provide a source!');
+      setIsLoading(false);
+      return;
+    }
 
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
@@ -498,6 +542,7 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
       url: finalUrl,
       type
     });
+    setIsLoading(false);
   };
 
   return (
@@ -529,7 +574,9 @@ const AddMapModal: React.FC<{ onAdd: (v: any) => void, onCancel: () => void, cha
         </div>
         <div className="flex space-x-4">
           <button type="button" onClick={onCancel} className="flex-1 py-4 font-black text-slate-400">Cancel</button>
-          <button type="submit" className="flex-1 py-4 bg-rose-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">Upload</button>
+          <button type="submit" disabled={isLoading} className="flex-1 py-4 bg-rose-500 text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">
+            {isLoading ? 'Processing...' : 'Upload'}
+          </button>
         </div>
       </form>
     </div>

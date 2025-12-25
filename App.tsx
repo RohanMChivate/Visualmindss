@@ -36,6 +36,7 @@ const App: React.FC = () => {
                 {currentUser.role === UserRole.ADMIN ? (
                   <>
                     <Route path="/admin" element={<AdminDashboard store={store} />} />
+                    <Route path="/profile" element={<Profile store={store} />} />
                     <Route path="*" element={<Navigate to="/admin" replace />} />
                   </>
                 ) : (
