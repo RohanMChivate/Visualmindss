@@ -55,9 +55,20 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
 
   const isYouTube = (url: string) => url.includes('youtube.com') || url.includes('youtu.be');
 
-  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.25, 4));
-  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.25, 1));
-  const handleReset = () => setZoomLevel(1);
+  const handleZoomIn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoomLevel(prev => Math.min(prev + 0.5, 4));
+  };
+  
+  const handleZoomOut = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoomLevel(prev => Math.max(prev - 0.5, 1));
+  };
+  
+  const handleReset = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoomLevel(1);
+  };
 
   return (
     <div className="min-h-screen bg-sky-50 p-4 md:p-8">
@@ -227,14 +238,14 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
           </div>
         )}
 
-        {/* Mind Map Viewer Modal with Robust Zoom Controls */}
+        {/* Mind Map Viewer Modal with Enhanced Zoom Controls */}
         {selectedMap && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md">
             <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[3.5rem] overflow-hidden shadow-2xl relative flex flex-col border-4 border-slate-900">
-              {/* Close Button */}
+              
               <button 
                 onClick={() => setSelectedMap(null)} 
-                className="absolute top-6 right-6 z-50 w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl shadow-xl hover:scale-110 active:scale-90 transition-all border-2 border-white/20"
+                className="absolute top-6 right-6 z-[60] w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl shadow-xl hover:scale-110 transition-all border-2 border-white/20"
               >
                 ✕
               </button>
@@ -243,33 +254,33 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                 <div>
                   <h2 className="text-3xl font-black text-slate-800 leading-tight">{selectedMap.title}</h2>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="bg-sky-100 text-sky-600 font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-lg">Study Material</span>
-                    <span className="bg-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-lg">
-                      {selectedMap.type === 'pdf' ? 'PDF Document' : `Zoom: ${Math.round(zoomLevel * 100)}%`}
+                    <span className="bg-sky-100 text-sky-600 font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-lg">Study Tool</span>
+                    <span className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-lg">
+                      {selectedMap.type === 'pdf' ? 'PDF' : `Scale: ${Math.round(zoomLevel * 100)}%`}
                     </span>
                   </div>
                 </div>
                 
                 {selectedMap.type !== 'pdf' && (
-                  <div className="flex bg-slate-900 p-2 rounded-2xl space-x-3 border-2 border-slate-800 shadow-xl z-10">
+                  <div className="flex bg-slate-900 p-2 rounded-2xl space-x-3 border-2 border-slate-800 shadow-2xl relative z-50">
                     <button 
                       onClick={handleZoomOut}
                       disabled={zoomLevel <= 1}
-                      className="w-12 h-12 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-inner transition-all group"
+                      className="w-12 h-12 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white rounded-xl flex items-center justify-center shadow-inner transition-all active:scale-95"
                       title="Zoom Out"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M20 12H4"></path></svg>
                     </button>
                     <button 
                       onClick={handleReset}
-                      className="px-6 h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center shadow-inner transition-all font-black text-xs uppercase tracking-widest border border-slate-700"
+                      className="px-6 h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center shadow-inner transition-all font-black text-xs uppercase tracking-widest border border-slate-700 active:scale-95"
                       title="Reset View"
                     >
                       Reset
                     </button>
                     <button 
                       onClick={handleZoomIn}
-                      className="w-12 h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center shadow-inner transition-all group"
+                      className="w-12 h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center shadow-inner transition-all active:scale-95"
                       title="Zoom In"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M12 4v16m8-8H4"></path></svg>
@@ -278,8 +289,7 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                 )}
               </div>
 
-              {/* Viewer Content */}
-              <div className="flex-grow overflow-auto p-0 bg-slate-100 relative group flex items-start justify-center">
+              <div className="flex-grow overflow-auto p-0 bg-slate-200 relative group flex items-start justify-center">
                 {selectedMap.type === 'pdf' ? (
                   <iframe 
                     src={selectedMap.url} 
@@ -287,23 +297,26 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                     title={selectedMap.title}
                   />
                 ) : (
-                  <div className="min-w-full min-h-full flex items-center justify-center p-8">
+                  <div 
+                    className="flex items-center justify-center min-w-full min-h-full p-8"
+                    style={{ 
+                        width: `${zoomLevel * 100}%`,
+                        height: zoomLevel > 1 ? 'auto' : '100%',
+                        transition: 'width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}
+                  >
                     <img 
                       src={selectedMap.url} 
                       alt={selectedMap.title} 
-                      style={{ 
-                        transform: `scale(${zoomLevel})`,
-                        transformOrigin: 'center center',
-                        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                      }}
-                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl bg-white border-2 border-white" 
+                      className="max-w-full h-auto rounded-lg shadow-2xl bg-white border-2 border-white object-contain" 
+                      style={{ transition: 'all 0.3s ease' }}
                     />
                   </div>
                 )}
                 
                 {selectedMap.type !== 'pdf' && zoomLevel > 1 && (
-                  <div className="fixed bottom-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-full text-xs font-black backdrop-blur-md pointer-events-none shadow-2xl border-2 border-white/10 z-50">
-                    Scroll to Pan & Explore 🗺️
+                  <div className="fixed bottom-12 left-1/2 -translate-x-1/2 bg-slate-900/80 text-white px-8 py-3 rounded-full text-xs font-black backdrop-blur-md pointer-events-none shadow-2xl border border-white/10 z-50">
+                    Scroll up/down & left/right to Explore 🧭
                   </div>
                 )}
               </div>
@@ -313,7 +326,7 @@ const StudentDashboard: React.FC<Props> = ({ store }) => {
                   onClick={() => setSelectedMap(null)}
                   className="bg-slate-900 text-white font-black px-12 py-4 rounded-2xl hover:bg-slate-800 transition-all text-lg shadow-lg hover:-translate-y-1 active:scale-95"
                 >
-                  Finished Reviewing
+                  I'm Done Learning! 🌟
                 </button>
               </div>
             </div>
